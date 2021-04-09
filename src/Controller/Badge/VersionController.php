@@ -27,7 +27,7 @@ class VersionController extends AbstractBadgeController
      * Version action.
      *
      * @param string $repository repository
-     * @param string $latest     latest
+     * @param string $latest latest
      * @param string $format
      *
      * @throws \InvalidArgumentException
@@ -40,12 +40,14 @@ class VersionController extends AbstractBadgeController
         $repository,
         $latest,
         $format = 'svg'
-    ): Response {
+    ): Response
+    {
+
         if (\in_array($request->query->get('format'), $poser->validStyles(), true)) {
             $format = $request->query->get('format');
         }
 
-        $function = 'create'.\ucfirst($latest).'Badge';
+        $function = 'create' . \ucfirst($latest) . 'Badge';
 
         return $this->serveBadge(
             $imageFactory,

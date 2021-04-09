@@ -73,7 +73,7 @@ DARK-CANARY
 
 ### For the first initialize of the app
 ```bash
-$ make init
+$ make .docker_img_deps
 ```
 Add in `/etc/hosts`
 ```console

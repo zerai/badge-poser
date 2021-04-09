@@ -42,7 +42,7 @@ services:
     environment:
       - ENABLE_CW=0
     ports:
-      - 9000:9000
+      - 9001:9001
     volumes:
       - .:/application:cached
       - ./sys/php/php.ini-dev:/usr/local/etc/php/conf.d/docker-php-zz-overrides.ini:ro
