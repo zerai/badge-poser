@@ -36,6 +36,7 @@ final class ClientStrategy
             throw new SourceClientNotFound('Source Client '.$repository->getSource().' not found');
         }
 
+        //TODO REMOVE (moved in GitHubDataProvider)
         if ($repository->isGitHub()) {
             /** @var Repo $repoApi */
             $repoApi = $this->githubClient->api('repo');
@@ -47,6 +48,7 @@ final class ClientStrategy
             $defaultBranch = (string) $repoGitHubData['default_branch'];
         }
 
+        //TODO REMOVE (moved in BitbucketDataProvider)
         if ($repository->isBitbucket()) {
             $repoBitbucketData = $this->bitbucketClient
                 ->repositories()
@@ -91,6 +93,7 @@ final class ClientStrategy
     /**
      * @param array<mixed> $repoGitHubData
      */
+    //TODO REMOVE (moved in GitHubDataProvider)
     private function isValidGithubRepository(array $repoGitHubData): bool
     {
         return !empty($repoGitHubData)
@@ -101,6 +104,7 @@ final class ClientStrategy
     /**
      * @param array<mixed> $repoBitbucketData
      */
+    //TODO REMOVE (moved in BitbucketDataProvider)
     private function isValidBitbucketRepository(array $repoBitbucketData): bool
     {
         return !empty($repoBitbucketData)
