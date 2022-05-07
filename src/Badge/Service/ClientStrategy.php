@@ -17,9 +17,13 @@ final class ClientStrategy
     private const GITHUB_REPOSITORY_PREFIX = 'blob';
     private const BITBUCKET_REPOSITORY_PREFIX = 'src';
 
-    public function __construct(private GithubClient $githubClient, private BitbucketClient $bitbucketClient)
+    public function __construct(private GithubClient $githubClient, private BitbucketClient $bitbucketClient, DefaultBranchProviderInterface ...$branchProviders)
     {
     }
+
+//    public function __construct(DefaultBranchProviderInterface ...$branchProviders)
+//    {
+//    }
 
     /**
      * @throws SourceClientNotFound
@@ -36,6 +40,7 @@ final class ClientStrategy
             throw new SourceClientNotFound('Source Client '.$repository->getSource().' not found');
         }
 
+        //TODO REMOVE (moved in GitHubDataProvider)
         if ($repository->isGitHub()) {
             /** @var Repo $repoApi */
             $repoApi = $this->githubClient->api('repo');
@@ -47,6 +52,7 @@ final class ClientStrategy
             $defaultBranch = (string) $repoGitHubData['default_branch'];
         }
 
+        //TODO MOVE IN BitbucketDataProvider
         if ($repository->isBitbucket()) {
             $repoBitbucketData = $this->bitbucketClient
                 ->repositories()
@@ -88,6 +94,7 @@ final class ClientStrategy
         return $repositoryPrefixUrl;
     }
 
+    //TODO REMOVE (moved in GitHubDataProvider)
     /**
      * @param array<mixed> $repoGitHubData
      */
@@ -98,6 +105,7 @@ final class ClientStrategy
             && \is_string($repoGitHubData['default_branch']);
     }
 
+    //TODO MOVE IN BitbucketDataProvider
     /**
      * @param array<mixed> $repoBitbucketData
      */
