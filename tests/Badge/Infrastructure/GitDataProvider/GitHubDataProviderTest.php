@@ -3,6 +3,7 @@
 namespace App\Tests\Badge\Infrastructure\GitDataProvider;
 
 use App\Badge\Exception\RepositoryDataNotValid;
+use App\Badge\Exception\SourceClientNotFound;
 use App\Badge\Infrastructure\GitDataProvider\GitHubDataProvider;
 use App\Badge\ValueObject\Repository;
 use Github\Api\Repo;
@@ -61,6 +62,18 @@ final class GitHubDataProviderTest extends TestCase
         self::assertEquals($defaultBranch, $this->gitHubDataProvider->getDefaultBranch(
             Repository::create($source, $this->username, $this->repositoryName)
         ));
+    }
+
+    public function testThrowExceptionIfRepositoryIsNotGithub(): void
+    {
+        $source = 'notManagedService.com';
+
+        $this->expectException(SourceClientNotFound::class);
+        $this->expectExceptionMessage('Source Client notManagedService.com not found');
+
+        $this->gitHubDataProvider->getDefaultBranch(
+            Repository::create($source, $this->username, $this->repositoryName)
+        );
     }
 
     public function testThrowExceptionIfEmptyGithubData(): void

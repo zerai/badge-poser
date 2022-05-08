@@ -3,6 +3,7 @@
 namespace App\Tests\Badge\Infrastructure\GitDataProvider;
 
 use App\Badge\Exception\RepositoryDataNotValid;
+use App\Badge\Exception\SourceClientNotFound;
 use App\Badge\Infrastructure\GitDataProvider\BitbucketDataProvider;
 use App\Badge\ValueObject\Repository;
 use Bitbucket\Api\Repositories;
@@ -71,6 +72,18 @@ final class BitbucketDataProviderTest extends TestCase
         self::assertEquals($defaultBranch, $this->bitbucketDataProvider->getDefaultBranch(
             Repository::create($source, $this->username, $this->repositoryName)
         ));
+    }
+
+    public function testThrowExceptionIfRepositoryIsNotBitbucket(): void
+    {
+        $source = 'notManagedService.com';
+
+        $this->expectException(SourceClientNotFound::class);
+        $this->expectExceptionMessage('Source Client notManagedService.com not found');
+
+        $this->bitbucketDataProvider->getDefaultBranch(
+            Repository::create($source, $this->username, $this->repositoryName)
+        );
     }
 
     public function testThrowExceptionIfEmptyBitbucketData(): void
