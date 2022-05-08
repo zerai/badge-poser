@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Badge\Service;
 
-use App\Badge\Exception\RepositoryDataNotValid;
 use App\Badge\Exception\SourceClientNotFound;
+use App\Badge\Infrastructure\GitDataProvider\BitbucketDataProvider;
+use App\Badge\Infrastructure\GitDataProvider\GitHubDataProvider;
 use App\Badge\Service\ClientStrategy;
 use App\Badge\ValueObject\Repository;
 use Bitbucket\Api\Repositories;
@@ -43,16 +44,19 @@ final class ClientStrategyTest extends TestCase
         $this->bitbucketClient = $this->getMockBuilder(BitbucketClient::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $this->clientStrategy = new ClientStrategy($this->githubClient, $this->bitbucketClient);
+
+        $githubDataProvider = new GitHubDataProvider($this->githubClient);
+
+        $bitbucketDataProvider = new BitbucketDataProvider($this->bitbucketClient);
+
+        $this->clientStrategy = new ClientStrategy($githubDataProvider, $bitbucketDataProvider);
         $this->username = 'username';
         $this->repositoryName = 'repositoryName';
     }
 
-    // TODO REMOVE
-    public function testGetDefaultBranchFromGithub(): void
+    public function testGetDefaultBranchMethodDelegationStrategyForGithub(): void
     {
-        self::markTestSkipped('Moved in github adapter test');
-        $defaultBranch = 'masterGithub';
+        $expectedDefaultBranch = 'masterGithub';
 
         $apiInterface = $this->getMockBuilder(Repo::class)
             ->disableOriginalConstructor()
@@ -61,7 +65,7 @@ final class ClientStrategyTest extends TestCase
             ->method('show')
             ->with($this->username, $this->repositoryName)
             ->willReturn([
-                'default_branch' => $defaultBranch,
+                'default_branch' => $expectedDefaultBranch,
             ]);
 
         $this->githubClient->expects(self::once())
@@ -69,14 +73,17 @@ final class ClientStrategyTest extends TestCase
             ->with('repo')
             ->willReturn($apiInterface);
         $source = 'github.com';
-        self::assertEquals($defaultBranch, $this->clientStrategy->getDefaultBranch(
+
+        $defaultBranch = $this->clientStrategy->getDefaultBranch(
             Repository::create($source, $this->username, $this->repositoryName)
-        ));
+        );
+
+        self::assertSame($expectedDefaultBranch, $defaultBranch);
     }
 
-    public function testGetDefaultBranchFromBitbucket(): void
+    public function testGetDefaultBranchMethodDelegationStrategyForBitbucket(): void
     {
-        $defaultBranch = 'masterBitbucket';
+        $expectedDefaultBranch = 'masterBitbucket';
 
         $workspaces = $this->getMockBuilder(Workspaces::class)
             ->disableOriginalConstructor()
@@ -86,7 +93,7 @@ final class ClientStrategyTest extends TestCase
             ->with($this->repositoryName)
             ->willReturn([
                 'mainbranch' => [
-                    'name' => $defaultBranch,
+                    'name' => $expectedDefaultBranch,
                 ],
             ]);
 
@@ -102,9 +109,11 @@ final class ClientStrategyTest extends TestCase
             ->method('repositories')
             ->willReturn($repositories);
         $source = 'bitbucket.org';
-        self::assertEquals($defaultBranch, $this->clientStrategy->getDefaultBranch(
+        $defaultBranch = $this->clientStrategy->getDefaultBranch(
             Repository::create($source, $this->username, $this->repositoryName)
-        ));
+        );
+
+        self::assertSame($expectedDefaultBranch, $defaultBranch);
     }
 
     public function testThrowExceptionIfSourceClientIsNotFound(): void
@@ -113,218 +122,6 @@ final class ClientStrategyTest extends TestCase
 
         $this->expectException(SourceClientNotFound::class);
         $this->expectExceptionMessage('Source Client notManagedClient not found');
-
-        $this->clientStrategy->getDefaultBranch(
-            Repository::create($source, $this->username, $this->repositoryName)
-        );
-    }
-
-    // TODO REMOVE
-    public function testThrowExceptionIfEmptyGithubData(): void
-    {
-        self::markTestSkipped('Moved in github adapter test');
-        $apiInterface = $this->getMockBuilder(Repo::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $apiInterface->expects(self::once())
-            ->method('show')
-            ->with($this->username, $this->repositoryName)->willReturn([]);
-
-        $this->githubClient->expects(self::once())
-            ->method('api')
-            ->with('repo')
-            ->willReturn($apiInterface);
-        $source = 'github.com';
-
-        $this->expectException(RepositoryDataNotValid::class);
-        $this->expectExceptionMessage('Repository data not valid: []');
-
-        $this->clientStrategy->getDefaultBranch(
-            Repository::create($source, $this->username, $this->repositoryName)
-        );
-    }
-
-    // TODO REMOVE
-    public function testThrowExceptionIfNotExistDefaultBranchKeyIntoGithubRepository(): void
-    {
-        self::markTestSkipped('Moved in github adapter test');
-        $apiInterface = $this->getMockBuilder(Repo::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $apiInterface->expects(self::once())
-            ->method('show')
-            ->with($this->username, $this->repositoryName)
-            ->willReturn([
-                'foo' => 'bar',
-            ]);
-
-        $this->githubClient->expects(self::once())
-            ->method('api')
-            ->with('repo')
-            ->willReturn($apiInterface);
-        $source = 'github.com';
-
-        $this->expectException(RepositoryDataNotValid::class);
-        $this->expectExceptionMessage('Repository data not valid: {"foo":"bar"}');
-
-        $this->clientStrategy->getDefaultBranch(
-            Repository::create($source, $this->username, $this->repositoryName)
-        );
-    }
-
-    // TODO REMOVE
-    public function testThrowExceptionIfDefaultBranchKeyIsNotStringIntoGithubRepository(): void
-    {
-        self::markTestSkipped('Moved in github adapter test');
-        $apiInterface = $this->getMockBuilder(Repo::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $apiInterface->expects(self::once())
-            ->method('show')
-            ->with($this->username, $this->repositoryName)
-            ->willReturn([
-                'foo' => ['bar'],
-            ]);
-
-        $this->githubClient->expects(self::once())
-            ->method('api')
-            ->with('repo')
-            ->willReturn($apiInterface);
-        $source = 'github.com';
-
-        $this->expectException(RepositoryDataNotValid::class);
-        $this->expectExceptionMessage('Repository data not valid: {"foo":["bar"]}');
-
-        $this->clientStrategy->getDefaultBranch(
-            Repository::create($source, $this->username, $this->repositoryName)
-        );
-    }
-
-    public function testThrowExceptionIfEmptyBitbucketData(): void
-    {
-        $workspaces = $this->getMockBuilder(Workspaces::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $workspaces->expects(self::once())
-            ->method('show')
-            ->with($this->repositoryName)
-            ->willReturn([]);
-
-        $repositories = $this->getMockBuilder(Repositories::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $repositories->expects(self::once())
-            ->method('workspaces')
-            ->with($this->username)
-            ->willReturn($workspaces);
-
-        $this->bitbucketClient->expects(self::once())
-            ->method('repositories')
-            ->willReturn($repositories);
-        $source = 'bitbucket.org';
-
-        $this->expectException(RepositoryDataNotValid::class);
-        $this->expectExceptionMessage('Repository data not valid: []');
-
-        $this->clientStrategy->getDefaultBranch(
-            Repository::create($source, $this->username, $this->repositoryName)
-        );
-    }
-
-    public function testThrowExceptionIfThereIsNoKeyMainBranchBitbucketData(): void
-    {
-        $workspaces = $this->getMockBuilder(Workspaces::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $workspaces->method('show')
-            ->with($this->repositoryName)
-            ->willReturn([
-                'foo' => 'bar',
-            ]);
-
-        $repositories = $this->getMockBuilder(Repositories::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $repositories->expects(self::once())
-            ->method('workspaces')
-            ->with($this->username)
-            ->willReturn($workspaces);
-
-        $this->bitbucketClient->expects(self::once())
-            ->method('repositories')
-            ->willReturn($repositories);
-        $source = 'bitbucket.org';
-
-        $this->expectException(RepositoryDataNotValid::class);
-        $this->expectExceptionMessage('Repository data not valid: {"foo":"bar"}');
-
-        $this->clientStrategy->getDefaultBranch(
-            Repository::create($source, $this->username, $this->repositoryName)
-        );
-    }
-
-    public function testThrowExceptionIfThereIsNoKeyNameBitbucketData(): void
-    {
-        $workspaces = $this->getMockBuilder(Workspaces::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $workspaces->expects(self::once())
-            ->method('show')
-            ->with($this->repositoryName)
-            ->willReturn([
-                'mainbranch' => ['bar'],
-            ]);
-
-        $repositories = $this->getMockBuilder(Repositories::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $repositories->expects(self::once())
-            ->method('workspaces')
-            ->with($this->username)
-            ->willReturn($workspaces);
-
-        $this->bitbucketClient->expects(self::once())
-            ->method('repositories')
-            ->willReturn($repositories);
-        $source = 'bitbucket.org';
-
-        $this->expectException(RepositoryDataNotValid::class);
-        $this->expectExceptionMessage('Repository data not valid: {"mainbranch":["bar"]}');
-
-        $this->clientStrategy->getDefaultBranch(
-            Repository::create($source, $this->username, $this->repositoryName)
-        );
-    }
-
-    public function testThrowExceptionIfThereIsNNameIsNotStringBitbucketData(): void
-    {
-        $workspaces = $this->getMockBuilder(Workspaces::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $workspaces->expects(self::once())
-            ->method('show')
-            ->with($this->repositoryName)
-            ->willReturn([
-                'mainbranch' => [
-                    'name' => ['bar'],
-                ],
-            ]);
-
-        $repositories = $this->getMockBuilder(Repositories::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $repositories->expects(self::once())
-            ->method('workspaces')
-            ->with($this->username)
-            ->willReturn($workspaces);
-
-        $this->bitbucketClient->expects(self::once())
-            ->method('repositories')
-            ->willReturn($repositories);
-        $source = 'bitbucket.org';
-
-        $this->expectException(RepositoryDataNotValid::class);
-        $this->expectExceptionMessage('Repository data not valid: {"mainbranch":{"name":["bar"]}}');
 
         $this->clientStrategy->getDefaultBranch(
             Repository::create($source, $this->username, $this->repositoryName)
