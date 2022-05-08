@@ -19,33 +19,26 @@ final class GitHubDataProvider implements DefaultBranchProviderInterface
 
     public function getDefaultBranch(Repository $repository): string
     {
-        $defaultBranch = '';
-
-        $username = $repository->getUsername();
-        $repositoryName = $repository->getName();
-
-        if (!$repository->isSupported()) {
+        if (!$repository->isGitHub()) {
+            //TODO ??? add or rename  exception UnsupportedGitService|UnsupportedGitHostingServiceProvider
+            // it's a business/domain decision, SourceClientNotFound = tech/ifra exception
             throw new SourceClientNotFound('Source Client '.$repository->getSource().' not found');
         }
 
-        if ($repository->isGitHub()) {
-            /** @var Repo $repoApi */
-            $repoApi = $this->githubClient->api('repo');
-            $repoGitHubData = $repoApi->show($username, $repositoryName);
-            if (!$this->isValidGithubRepository($repoGitHubData)) {
-                throw new RepositoryDataNotValid('Repository data not valid: '.\json_encode($repoGitHubData));
-            }
-
-            $defaultBranch = (string) $repoGitHubData['default_branch'];
+        /** @var Repo $repoApi */
+        $repoApi = $this->githubClient->api('repo');
+        $repoGitHubData = $repoApi->show($repository->getUsername(), $repository->getName());
+        if (!$this->isValidRepository($repoGitHubData)) {
+            throw new RepositoryDataNotValid('Repository data not valid: '.\json_encode($repoGitHubData));
         }
 
-        return $defaultBranch;
+        return (string) $repoGitHubData['default_branch'];
     }
 
     /**
      * @param array<mixed> $repoGitHubData
      */
-    private function isValidGithubRepository(array $repoGitHubData): bool
+    private function isValidRepository(array $repoGitHubData): bool
     {
         return !empty($repoGitHubData)
             && \array_key_exists('default_branch', $repoGitHubData)

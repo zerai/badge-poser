@@ -18,36 +18,28 @@ final class BitbucketDataProvider implements DefaultBranchProviderInterface
 
     public function getDefaultBranch(Repository $repository): string
     {
-        // TODO: Implement getDefaultBranch() method.
-        $defaultBranch = '';
-
-        $username = $repository->getUsername();
-        $repositoryName = $repository->getName();
-
-        if (!$repository->isSupported()) {
+        if (!$repository->isBitbucket()) {
+            //TODO ??? add or rename  exception UnsupportedGitService|UnsupportedGitHostingServiceProvider
+            // it's a business/domain decision, SourceClientNotFound = tech/ifra exception
             throw new SourceClientNotFound('Source Client '.$repository->getSource().' not found');
         }
 
-        if ($repository->isBitbucket()) {
-            $repoBitbucketData = $this->bitbucketClient
-                ->repositories()
-                ->workspaces($username)
-                ->show($repositoryName);
+        $repoBitbucketData = $this->bitbucketClient
+            ->repositories()
+            ->workspaces($repository->getUsername())
+            ->show($repository->getName());
 
-            if (!$this->isValidBitbucketRepository($repoBitbucketData)) {
-                throw new RepositoryDataNotValid('Repository data not valid: '.\json_encode($repoBitbucketData));
-            }
-
-            $defaultBranch = (string) $repoBitbucketData['mainbranch']['name'];
+        if (!$this->isValidRepository($repoBitbucketData)) {
+            throw new RepositoryDataNotValid('Repository data not valid: '.\json_encode($repoBitbucketData));
         }
 
-        return $defaultBranch;
+        return (string) $repoBitbucketData['mainbranch']['name'];
     }
 
     /**
      * @param array<mixed> $repoBitbucketData
      */
-    private function isValidBitbucketRepository(array $repoBitbucketData): bool
+    private function isValidRepository(array $repoBitbucketData): bool
     {
         return !empty($repoBitbucketData)
             && \array_key_exists('mainbranch', $repoBitbucketData)
