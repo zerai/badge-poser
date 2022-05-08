@@ -44,6 +44,8 @@ final class ClientStrategy
         return $defaultBranch;
     }
 
+    // TODO REMOVE
+    // Add delegation strategy and Move in adapters
     public function getRepositoryPrefix(Repository $repository, string $repoUrl): string
     {
         $repositoryPrefixUrl = '';
