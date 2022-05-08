@@ -49,10 +49,9 @@ final class ClientStrategyTest extends TestCase
     }
 
     // TODO REMOVE
-    // moved in adapter test
     public function testGetDefaultBranchFromGithub(): void
     {
-        self::markTestSkipped('Moved in GitHubDataProviderTest');
+        self::markTestSkipped('Moved in github adapter test');
         $defaultBranch = 'masterGithub';
 
         $apiInterface = $this->getMockBuilder(Repo::class)
@@ -121,10 +120,9 @@ final class ClientStrategyTest extends TestCase
     }
 
     // TODO REMOVE
-    // moved in adapter test
     public function testThrowExceptionIfEmptyGithubData(): void
     {
-        self::markTestSkipped('Moved in GitHubDataProviderTest');
+        self::markTestSkipped('Moved in github adapter test');
         $apiInterface = $this->getMockBuilder(Repo::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -147,10 +145,9 @@ final class ClientStrategyTest extends TestCase
     }
 
     // TODO REMOVE
-    // moved in adapter test
     public function testThrowExceptionIfNotExistDefaultBranchKeyIntoGithubRepository(): void
     {
-        self::markTestSkipped('Moved in GitHubDataProviderTest');
+        self::markTestSkipped('Moved in github adapter test');
         $apiInterface = $this->getMockBuilder(Repo::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -176,9 +173,9 @@ final class ClientStrategyTest extends TestCase
     }
 
     // TODO REMOVE
-    // moved in adapter test
     public function testThrowExceptionIfDefaultBranchKeyIsNotStringIntoGithubRepository(): void
     {
+        self::markTestSkipped('Moved in github adapter test');
         $apiInterface = $this->getMockBuilder(Repo::class)
             ->disableOriginalConstructor()
             ->getMock();

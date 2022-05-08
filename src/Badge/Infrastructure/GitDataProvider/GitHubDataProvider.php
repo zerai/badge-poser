@@ -11,7 +11,7 @@ use Github\Client as GithubClient;
 
 final class GitHubDataProvider implements DefaultBranchProviderInterface
 {
-    private const SUPPORTED_SERVICE = 'github.com';
+    private const SUPPORTED_GIT_HOSTING_SERVICE = 'github.com';
 
     public function __construct(private GithubClient $githubClient)
     {
@@ -54,6 +54,6 @@ final class GitHubDataProvider implements DefaultBranchProviderInterface
 
     public function supportedGitHostingService(): string
     {
-        return self::SUPPORTED_SERVICE;
+        return self::SUPPORTED_GIT_HOSTING_SERVICE;
     }
 }
